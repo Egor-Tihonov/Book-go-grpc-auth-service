@@ -10,8 +10,8 @@ type DBPostgres struct {
 	Pool *pgxpool.Pool
 }
 
-func New(ctx context.Context, conn string) (*DBPostgres, error) {
-	pool, err := pgxpool.Connect(ctx, conn)
+func New(conn string) (*DBPostgres, error) {
+	pool, err := pgxpool.Connect(context.Background(), conn)
 	if err != nil {
 		return nil, err
 	}

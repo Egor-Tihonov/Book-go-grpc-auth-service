@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/models"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 )

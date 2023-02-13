@@ -1,11 +1,13 @@
 package services
 
 import (
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/repository"
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/utils"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/repository"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 )
 
 type Service struct {
+	pb.UnimplementedAuthServiceServer
 	Rps *repository.DBPostgres
 	Jwt *utils.JwtWrapper
 }

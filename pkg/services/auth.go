@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/models"
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/pb"
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/utils"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 	"github.com/google/uuid"
 )
 

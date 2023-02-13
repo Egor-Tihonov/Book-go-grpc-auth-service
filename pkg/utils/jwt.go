@@ -3,7 +3,7 @@ package utils
 import (
 	"time"
 
-	"github.com/Egor-Tihonov/go-grpc-auth-service.git/pkg/models"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
 	"github.com/golang-jwt/jwt"
 )
 
