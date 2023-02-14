@@ -5,12 +5,13 @@ import (
 	"net/http"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
-	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb"
+	pb "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb/auth"
+
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 	"github.com/google/uuid"
 )
 
-func (s *Service) Registration(ctx context.Context, req *pb.RegistrationRequest) (*pb.Response, error) {
+func (s *Server) Registration(ctx context.Context, req *pb.RegistrationRequest) (*pb.Response, error) {
 	newID := uuid.New().String()
 
 	user := models.User{
@@ -23,7 +24,7 @@ func (s *Service) Registration(ctx context.Context, req *pb.RegistrationRequest)
 		return &pb.Response{
 			Status: http.StatusInternalServerError,
 			Error:  err.Error(),
-		}, nil
+		}, err
 	}
 
 	user.Password = hashpassword
@@ -32,7 +33,20 @@ func (s *Service) Registration(ctx context.Context, req *pb.RegistrationRequest)
 		return &pb.Response{
 			Status: http.StatusNotFound,
 			Error:  "E-mail already exist",
-		}, nil
+		}, err
+	}
+
+	res, err := s.UserClient.CreateUser(&models.UserCreate{
+		ID:       user.ID,
+		Email:    user.Email,
+		Name:     req.Name,
+		UserName: req.Username,
+	})
+	if err != nil {
+		return &pb.Response{
+			Status: res.Status,
+			Error:  res.Error,
+		}, err
 	}
 
 	return &pb.Response{
@@ -40,7 +54,7 @@ func (s *Service) Registration(ctx context.Context, req *pb.RegistrationRequest)
 	}, nil
 }
 
-func (s *Service) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
 	user, err := s.Rps.GetUser(ctx, req.Authstring)
 	if err != nil {
 		return &pb.LoginResponse{
@@ -80,4 +94,19 @@ func (s *Service) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginRes
 		},
 		Token: token,
 	}, nil
+}
+
+func (s *Server) Validate(user *models.UserCreate) bool {
+	if user.Email != "" {
+		return false
+	}
+
+	if user.Name != "" {
+		return false
+	}
+
+	if user.UserName != "" {
+		return false
+	}
+	return true
 }

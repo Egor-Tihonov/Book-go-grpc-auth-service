@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"time"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/config"
-	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb"
+	pb "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb/auth"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/repository"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/services"
+	userSe "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/user"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -16,6 +16,8 @@ import (
 
 func main() {
 	c, err := config.LoadConfig()
+	
+	svc := userSe.RegisterHandlers(c)
 
 	if err != nil {
 		logrus.Fatalf("error load configs: %w", err)
@@ -32,14 +34,14 @@ func main() {
 		logrus.Fatalln("Failed to listing:", err)
 	}
 
-	fmt.Println("------------------------------\n------ START SERVER ON ", c.Port, " ------\n-------------------------------------")
+	logrus.Info("------ START SERVER ON ", c.Port, " ------")
 
 	jwt := utils.JwtWrapper{
 		SecretKey:       c.JWTSecretKey,
 		ExpirationHours: time.Now().Add(1 * time.Hour),
 	}
 
-	s := services.New(db, &jwt)
+	s := services.New(db, &jwt, svc)
 
 	grpcServer := grpc.NewServer()
 
