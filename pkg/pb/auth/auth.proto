@@ -7,6 +7,19 @@ option go_package = "./pkg/pb/auth";
 service AuthService{
     rpc Registration(RegistrationRequest) returns (Response){}
     rpc Login(LoginRequest) returns (LoginResponse){}
+    rpc UpdatePassword(UpdatePasswordRequest) returns (Response){}
+    rpc DeleteUser(DeleteUserRequest) returns (Response){}
+}
+// Update user
+message UpdatePasswordRequest{
+    string oldpassword = 1;
+    string newpassword = 2;
+    string id = 3;
+}
+
+//Delete user
+message DeleteUserRequest{
+    string id = 1;
 }
 
 // Login

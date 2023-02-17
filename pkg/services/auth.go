@@ -2,110 +2,85 @@ package services
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
-	pb "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb/auth"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 	"github.com/google/uuid"
 )
 
-func (s *Server) Registration(ctx context.Context, req *pb.RegistrationRequest) (*pb.Response, error) {
-	newID := uuid.New().String()
+func (s *Server) GetUser(ctx context.Context, id string) (*models.User, error) {
+	return s.rps.Get(ctx, id)
+}
 
-	user := models.User{
-		ID:    newID,
-		Email: req.Email,
+func (s *Server) Registration(ctx context.Context, user *models.User) (string, error) {
+	if !s.Validate(user) {
+		return "", models.ErrorEmptyUser
 	}
 
-	hashpassword, err := utils.HashPassword(req.Password)
+	newID := uuid.New().String()
+	user.ID = newID
+	hashpassword, err := utils.HashPassword(user.Password)
 	if err != nil {
-		return &pb.Response{
-			Status: http.StatusInternalServerError,
-			Error:  err.Error(),
-		}, err
+		return "", err
 	}
 
 	user.Password = hashpassword
 
-	if err = s.Rps.CreateUser(ctx, &user); err != nil {
-		return &pb.Response{
-			Status: http.StatusNotFound,
-			Error:  "E-mail already exist",
-		}, err
+	if err = s.rps.CreateUser(ctx, user); err != nil {
+		return "", err
 	}
 
-	res, err := s.UserClient.CreateUser(&models.UserCreate{
-		ID:       user.ID,
-		Email:    user.Email,
-		Name:     req.Name,
-		UserName: req.Username,
-	})
 	if err != nil {
-		return &pb.Response{
-			Status: res.Status,
-			Error:  res.Error,
-		}, err
+		return "", err
 	}
 
-	return &pb.Response{
-		Status: http.StatusCreated,
-	}, nil
+	return newID, nil
 }
 
-func (s *Server) Login(ctx context.Context, req *pb.LoginRequest) (*pb.LoginResponse, error) {
-	user, err := s.Rps.GetUser(ctx, req.Authstring)
+func (s *Server) Generate(ctx context.Context, password string, user *models.User) (string, error) {
+	err := utils.CheckPassword(password, user.Password)
 	if err != nil {
-		return &pb.LoginResponse{
-			Response: &pb.Response{
-				Status: http.StatusBadGateway,
-				Error:  "User not found",
-			},
-			Token: "",
-		}, nil
-	}
-
-	err = utils.CheckPassword(req.Password, user.Password)
-	if err != nil {
-		return &pb.LoginResponse{
-			Response: &pb.Response{
-				Status: http.StatusBadGateway,
-				Error:  "Password is incorrect",
-			},
-			Token: "",
-		}, nil
+		return "", models.ErrorIncorrectPassword
 	}
 
 	token, err := s.Jwt.GenerateToken(user)
 	if err != nil {
-		return &pb.LoginResponse{
-			Response: &pb.Response{
-				Status: http.StatusBadGateway,
-				Error:  "Token doesnt generate",
-			},
-			Token: "",
-		}, nil
+		return "", err
 	}
 
-	return &pb.LoginResponse{
-		Response: &pb.Response{
-			Status: http.StatusOK,
-		},
-		Token: token,
-	}, nil
+	return token, nil
 }
 
-func (s *Server) Validate(user *models.UserCreate) bool {
-	if user.Email != "" {
+func (s *Server) UpdatePassword(ctx context.Context, body *models.UserUpdate) error {
+	user, err := s.rps.Get(ctx, body.Id)
+	if err != nil {
+		return err
+	}
+
+	err = utils.CheckPassword(body.OldPassword, user.Password)
+	if err != nil {
+		return models.ErrorIncorrectPassword
+	}
+
+	err = s.rps.Update(ctx, body)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (s *Server) DeleteUser(ctx context.Context, id string) error {
+	return s.rps.Delete(ctx, id)
+}
+
+func (s *Server) Validate(user *models.User) bool {
+	if user.Email == "" {
 		return false
 	}
 
-	if user.Name != "" {
-		return false
-	}
-
-	if user.UserName != "" {
+	if user.Password == "" {
 		return false
 	}
 	return true

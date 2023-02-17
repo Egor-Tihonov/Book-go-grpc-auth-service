@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/config"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/db"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/handlers"
 	pb "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb/auth"
-	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/repository"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/services"
 	userSe "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/user"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
@@ -16,14 +17,14 @@ import (
 
 func main() {
 	c, err := config.LoadConfig()
-	
+
 	svc := userSe.RegisterHandlers(c)
 
 	if err != nil {
 		logrus.Fatalf("error load configs: %w", err)
 	}
 
-	db, err := repository.New(c.DBUrl)
+	dbP, err := db.New(c.DBUrl)
 	if err != nil {
 		logrus.Fatalf("error connecting to db, %w", err)
 	}
@@ -41,11 +42,12 @@ func main() {
 		ExpirationHours: time.Now().Add(1 * time.Hour),
 	}
 
-	s := services.New(db, &jwt, svc)
+	s := services.New(dbP, &jwt, svc)
+	h := handlers.New(s)
 
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterAuthServiceServer(grpcServer, s)
+	pb.RegisterAuthServiceServer(grpcServer, h)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		logrus.Fatalln("Failed to serve:", err)

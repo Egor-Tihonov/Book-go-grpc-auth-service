@@ -5,6 +5,7 @@ import (
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/models"
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
 )
 
 type JwtWrapper struct {
@@ -25,8 +26,9 @@ func (w *JwtWrapper) GenerateToken(user *models.User) (accessToken string, err e
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Create the JWT string
-	accessToken, err = token.SignedString(w.SecretKey)
+	accessToken, err = token.SignedString([]byte(w.SecretKey))
 	if err != nil {
+		logrus.Errorf("auth service: Failed generate token, %w", err)
 		return
 	}
 

@@ -24,6 +24,8 @@ const _ = grpc.SupportPackageIsVersion7
 type AuthServiceClient interface {
 	Registration(ctx context.Context, in *RegistrationRequest, opts ...grpc.CallOption) (*Response, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*Response, error)
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type authServiceClient struct {
@@ -52,12 +54,32 @@ func (c *authServiceClient) Login(ctx context.Context, in *LoginRequest, opts ..
 	return out, nil
 }
 
+func (c *authServiceClient) UpdatePassword(ctx context.Context, in *UpdatePasswordRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/UpdatePassword", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *authServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*Response, error) {
+	out := new(Response)
+	err := c.cc.Invoke(ctx, "/auth.AuthService/DeleteUser", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AuthServiceServer is the server API for AuthService service.
 // All implementations must embed UnimplementedAuthServiceServer
 // for forward compatibility
 type AuthServiceServer interface {
 	Registration(context.Context, *RegistrationRequest) (*Response, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	UpdatePassword(context.Context, *UpdatePasswordRequest) (*Response, error)
+	DeleteUser(context.Context, *DeleteUserRequest) (*Response, error)
 	mustEmbedUnimplementedAuthServiceServer()
 }
 
@@ -70,6 +92,12 @@ func (UnimplementedAuthServiceServer) Registration(context.Context, *Registratio
 }
 func (UnimplementedAuthServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedAuthServiceServer) UpdatePassword(context.Context, *UpdatePasswordRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePassword not implemented")
+}
+func (UnimplementedAuthServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
 func (UnimplementedAuthServiceServer) mustEmbedUnimplementedAuthServiceServer() {}
 
@@ -120,6 +148,42 @@ func _AuthService_Login_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AuthService_UpdatePassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).UpdatePassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/UpdatePassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).UpdatePassword(ctx, req.(*UpdatePasswordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AuthService_DeleteUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthServiceServer).DeleteUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthService/DeleteUser",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthServiceServer).DeleteUser(ctx, req.(*DeleteUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AuthService_ServiceDesc is the grpc.ServiceDesc for AuthService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +198,14 @@ var AuthService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Login",
 			Handler:    _AuthService_Login_Handler,
+		},
+		{
+			MethodName: "UpdatePassword",
+			Handler:    _AuthService_UpdatePassword_Handler,
+		},
+		{
+			MethodName: "DeleteUser",
+			Handler:    _AuthService_DeleteUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

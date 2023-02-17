@@ -1,22 +1,20 @@
 package services
 
 import (
-	pb "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/pb/auth"
-	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/repository"
+	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/db"
 	userSe "github.com/Egor-Tihonov/go-grpc-auth-service/pkg/user"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/utils"
 )
 
 type Server struct {
-	pb.UnimplementedAuthServiceServer
-	Rps        *repository.DBPostgres
+	rps        *db.DBPostgres
 	Jwt        *utils.JwtWrapper
 	UserClient *userSe.ServiceClient
 }
 
-func New(r *repository.DBPostgres, jwt *utils.JwtWrapper, client *userSe.ServiceClient) *Server {
+func New(r *db.DBPostgres, jwt *utils.JwtWrapper, client *userSe.ServiceClient) *Server {
 	return &Server{
-		Rps:        r,
+		rps:        r,
 		Jwt:        jwt,
 		UserClient: client,
 	}
