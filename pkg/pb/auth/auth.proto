@@ -10,11 +10,12 @@ service AuthService{
     rpc UpdatePassword(UpdatePasswordRequest) returns (Response){}
     rpc DeleteUser(DeleteUserRequest) returns (Response){}
 }
+
 // Update user
 message UpdatePasswordRequest{
-    string oldpassword = 1;
-    string newpassword = 2;
-    string id = 3;
+    string id = 1;
+    string oldpassword = 2;
+    string newpassword = 3;
 }
 
 //Delete user

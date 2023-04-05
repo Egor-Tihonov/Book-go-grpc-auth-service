@@ -10,7 +10,6 @@ import (
 
 type JwtWrapper struct {
 	SecretKey       string
-	ExpirationHours time.Time
 }
 
 func (w *JwtWrapper) GenerateToken(user *models.User) (accessToken string, err error) {
@@ -18,7 +17,7 @@ func (w *JwtWrapper) GenerateToken(user *models.User) (accessToken string, err e
 		ID:    user.ID,
 		Email: user.Email,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: w.ExpirationHours.Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 1).Unix(),
 		},
 	}
 

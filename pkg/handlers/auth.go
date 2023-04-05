@@ -77,7 +77,6 @@ func (h *Handler) UpdatePassword(ctx context.Context, req *pb.UpdatePasswordRequ
 		OldPassword: req.Oldpassword,
 		NewPassword: req.Newpassword,
 	}
-
 	err := h.se.UpdatePassword(ctx, &body)
 	if err != nil {
 		return &pb.Response{
@@ -103,19 +102,4 @@ func (h *Handler) DeleteUser(ctx context.Context, req *pb.DeleteUserRequest) (*p
 	return &pb.Response{
 		Status: http.StatusOK,
 	}, nil
-}
-
-func (h *Handler) Validate(user *models.UserCreate) bool {
-	if user.Email != "" {
-		return false
-	}
-
-	if user.Name != "" {
-		return false
-	}
-
-	if user.UserName != "" {
-		return false
-	}
-	return true
 }

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net"
-	"time"
+	"runtime"
+	"strings"
 
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/config"
 	"github.com/Egor-Tihonov/go-grpc-auth-service/pkg/db"
@@ -16,6 +18,8 @@ import (
 )
 
 func main() {
+	InitLog()
+	
 	c, err := config.LoadConfig()
 
 	svc := userSe.RegisterHandlers(c)
@@ -38,8 +42,7 @@ func main() {
 	logrus.Info("------ START SERVER ON ", c.Port, " ------")
 
 	jwt := utils.JwtWrapper{
-		SecretKey:       c.JWTSecretKey,
-		ExpirationHours: time.Now().Add(1 * time.Hour),
+		SecretKey: c.JWTSecretKey,
 	}
 
 	s := services.New(dbP, &jwt, svc)
@@ -52,4 +55,24 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		logrus.Fatalln("Failed to serve:", err)
 	}
+}
+
+func InitLog() {
+	logrus.SetReportCaller(true)
+
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05",
+		ForceColors:     true,
+		DisableColors:   false,
+		CallerPrettyfier: func(f *runtime.Frame) (string, string) {
+			return "", fmt.Sprintf(" %s:%d", formatFilePath(f.File), f.Line)
+		},
+	})
+
+}
+
+func formatFilePath(path string) string {
+	arr := strings.Split(path, "/")
+	return arr[len(arr)-1]
 }

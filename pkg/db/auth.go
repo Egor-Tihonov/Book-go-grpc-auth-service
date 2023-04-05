@@ -18,9 +18,22 @@ func (p *DBPostgres) CreateUser(ctx context.Context, user *models.User) error {
 	return nil
 }
 
+func (p *DBPostgres) GetForUpdatePassword(ctx context.Context, id string) (*models.User, error) {
+	user := models.User{}
+	err := p.Pool.QueryRow(ctx, "select password,email from users where id=$1", id).Scan(
+		&user.Password, &user.Email)
+	if err != nil {
+		if err.Error() == pgx.ErrNoRows.Error() {
+			return nil, models.ErrorUserDoesntExist
+		}
+		logrus.Errorf("auth service error: error get user: %w", err.Error())
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (p *DBPostgres) Get(ctx context.Context, email string) (*models.User, error) {
 	user := models.User{}
-
 	err := p.Pool.QueryRow(ctx, "select password,id from users where email=$1", email).Scan(
 		&user.Password, &user.ID)
 	if err != nil {
@@ -30,12 +43,11 @@ func (p *DBPostgres) Get(ctx context.Context, email string) (*models.User, error
 		logrus.Errorf("auth service error: error get user: %w", err.Error())
 		return nil, err
 	}
-
 	return &user, nil
 }
 
 func (p *DBPostgres) Update(ctx context.Context, body *models.UserUpdate) error {
-	a, err := p.Pool.Exec(ctx, "update users set password=$1 where id=$5",
+	a, err := p.Pool.Exec(ctx, "update users set password=$1 where id=$2",
 		&body.NewPassword, &body.Id)
 	if a.RowsAffected() == 0 {
 		return models.ErrorUserDoesntExist
